@@ -16,7 +16,7 @@
 //      Signals for an SRAM interface with ECC
 //
 
-interface axi_mem_if #(parameter integer ADDR_WIDTH = 16, parameter integer DATA_WIDTH = 32) (input logic clk, input logic rst_b);
+interface jh_mem_1p_if #(parameter integer ADDR_WIDTH = 16, parameter integer DATA_WIDTH = 32) (input logic clk, input logic rst_b);
 
     // SRAM data
     typedef struct packed {
@@ -25,8 +25,9 @@ interface axi_mem_if #(parameter integer ADDR_WIDTH = 16, parameter integer DATA
 
     // Request to sram
     typedef struct packed {
-        logic cs;
-        logic we;
+        logic read_enable;
+        logic write_enable;
+        logic [DATA_WIDTH-1:0] bit_enable;
         logic [ADDR_WIDTH-1:0] addr;
         sram_data_t wdata;
     } sram_req_t;
@@ -40,7 +41,7 @@ interface axi_mem_if #(parameter integer ADDR_WIDTH = 16, parameter integer DATA
 
     sram_resp_t resp;
 
-    // Requester interface (typically on AXI module)
+    // Requester interface (typically on IP module)
     modport request (
 
         // Request to SRAM

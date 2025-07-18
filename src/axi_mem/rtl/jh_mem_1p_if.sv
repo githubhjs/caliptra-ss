@@ -92,6 +92,7 @@ interface jh_mem_1p_if #(parameter integer ADDR_WIDTH = 16, parameter integer DA
     // ✅ Coverage
     // --------------------------
     covergroup cg_sram_req @(posedge clk_p);
+        option.per_instance = 1;
         coverpoint req.read_enable;
         coverpoint req.write_enable;
         cross req.read_enable, req.write_enable;

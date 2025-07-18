@@ -59,5 +59,62 @@ interface jh_mem_1p_if #(parameter integer ADDR_WIDTH = 16, parameter integer DA
         // Response from SRAM
         output   resp
     );
+    
+    // --------------------------
+    // ✅ Assertions
+    // --------------------------
 
+    // 1. 讀寫不應同時為 high
+    property p_read_write_exclusive;
+        @(posedge clk_p) disable iff (!rst_n)
+        !(req.read_enable && req.write_enable);
+    endproperty
+    a_read_write_exclusive: assert property(p_read_write_exclusive)
+        else $warning("WARNING: Read and Write enabled simultaneously");
+
+    // 2. write_enable 時 bit_enable 應非全 0（否則是無效寫入）
+    property p_write_has_valid_be;
+        @(posedge clk_p) disable iff (!rst_n)
+        req.write_enable |-> (req.bit_enable != '0);
+    endproperty
+    a_write_has_valid_be: assert property(p_write_has_valid_be)
+        else $warning("WARNING: Write enable active but all bit_enables are 0");
+
+    // 3. addr 合法範圍檢查（可選）
+    property p_addr_range_check;
+        @(posedge clk_p) disable iff (!rst_n)
+        (req.read_enable || req.write_enable) |-> req.addr < (1 << ADDR_WIDTH);
+    endproperty
+    a_addr_range_check: assert property(p_addr_range_check)
+        else $warning("WARNING: Address out of legal range");
+
+    // --------------------------
+    // ✅ Coverage
+    // --------------------------
+    covergroup cg_sram_req @(posedge clk_p);
+        coverpoint req.read_enable;
+        coverpoint req.write_enable;
+        cross req.read_enable, req.write_enable;
+        coverpoint $countones(req.bit_enable);  // bit enable usage
+        coverpoint req.addr[3:0]; // lower 4-bit address diversity
+    endgroup
+
+    cg_sram_req cov_req = new();
+
+    // --------------------------
+    // ✅ Optional utility functions
+    // --------------------------
+    function automatic bit is_idle();
+        return !(req.read_enable || req.write_enable);
+    endfunction
+
+    function automatic bit is_read();
+        return req.read_enable && !req.write_enable;
+    endfunction
+
+    function automatic bit is_write();
+        return req.write_enable && !req.read_enable;
+    endfunction
+
+    
 endinterface

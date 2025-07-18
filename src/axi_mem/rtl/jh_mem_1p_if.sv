@@ -101,7 +101,10 @@ interface jh_mem_1p_if #(parameter integer ADDR_WIDTH = 16, parameter integer DA
     endgroup
 
     cg_sram_req cov_req = new();
-
+    // ✅ 自動命名 coverage instance 以避免 CGDEFN warning
+    initial begin : init_set_inst_name
+        cov_req.set_inst_name($sformatf("%m.cov_req"));
+    end
     // --------------------------
     // ✅ Optional utility functions
     // --------------------------
